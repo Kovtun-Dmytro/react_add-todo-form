@@ -31,16 +31,20 @@ type FormState = {
 
 export const App = () => {
   const [form, setForm] = useState<FormState>({
-    todos: todosFromServer.map(todo => ({
-      ...todo,
-      userId: Number(todo.userId),
-      user: usersFromServer.find(u => u.id === todo.userId) ?? {
-        id: -1,
-        name: 'Unknown user',
-        username: 'unknown',
-        email: 'unknown@example.com',
-      },
-    })),
+    todos: todosFromServer.map(todo => {
+      const numericUserId = Number(todo.userId);
+
+      return {
+        ...todo,
+        userId: numericUserId,
+        user: usersFromServer.find(u => u.id === numericUserId) ?? {
+          id: -1,
+          name: 'Unknown user',
+          username: 'unknown',
+          email: 'unknown@example.com',
+        },
+      };
+    }),
     title: '',
     userId: '',
     errors: {
@@ -99,12 +103,20 @@ export const App = () => {
     }
 
     const maxId =
-      form.todos.length > 0 ? Math.max(...form.todos.map(t => t.id)) : 0;
+      form.todos.length > 0 ? Math.max(...form.todos.map(todo => todo.id)) : 0;
 
     const user = usersFromServer.find(u => u.id === +form.userId);
 
     if (!user) {
-      throw new Error(`User with id ${form.userId} not found`);
+      setForm(prev => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          user: `User with id ${form.userId} not found`,
+        },
+      }));
+
+      return;
     }
 
     const newTodo: Todo = {
@@ -130,7 +142,9 @@ export const App = () => {
 
       <form onSubmit={handleAdd}>
         <div className="field">
+          <label htmlFor="titleInput">Title</label>
           <input
+            id="titleInput"
             type="text"
             data-cy="titleInput"
             value={form.title}
@@ -143,7 +157,9 @@ export const App = () => {
         </div>
 
         <div className="field">
+          <label htmlFor="userSelect">User</label>
           <select
+            id="userSelect"
             data-cy="userSelect"
             value={form.userId}
             onChange={handleUserChange}
