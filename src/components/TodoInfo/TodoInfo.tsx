@@ -11,7 +11,7 @@ type User = {
 type Todo = {
   id: number;
   title: string;
-  userId: string | number;
+  userId: number;
   completed: boolean;
   user: User;
 };

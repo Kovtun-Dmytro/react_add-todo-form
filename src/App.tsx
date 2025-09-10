@@ -14,7 +14,7 @@ type User = {
 type Todo = {
   id: number;
   title: string;
-  userId: string | number;
+  userId: number;
   completed: boolean;
   user: User;
 };
@@ -33,7 +33,13 @@ export const App = () => {
   const [form, setForm] = useState<FormState>({
     todos: todosFromServer.map(todo => ({
       ...todo,
-      user: usersFromServer.find(u => u.id === todo.userId)!,
+      userId: Number(todo.userId),
+      user: usersFromServer.find(u => u.id === todo.userId) ?? {
+        id: -1,
+        name: 'Unknown user',
+        username: 'unknown',
+        email: 'unknown@example.com',
+      },
     })),
     title: '',
     userId: '',
@@ -95,12 +101,16 @@ export const App = () => {
     const maxId =
       form.todos.length > 0 ? Math.max(...form.todos.map(t => t.id)) : 0;
 
-    const user = usersFromServer.find(u => u.id === +form.userId)!;
+    const user = usersFromServer.find(u => u.id === +form.userId);
+
+    if (!user) {
+      throw new Error(`User with id ${form.userId} not found`);
+    }
 
     const newTodo: Todo = {
       id: maxId + 1,
       title: form.title,
-      userId: form.userId,
+      userId: +form.userId,
       completed: false,
       user: user,
     };
